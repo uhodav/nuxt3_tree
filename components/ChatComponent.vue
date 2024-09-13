@@ -15,7 +15,6 @@ const name = 'ChatComponent';
 const emit = defineEmits([
   'update:currentRoomId',
   'update:rooms',
-
 ]);
 
 interface NewRoom {
