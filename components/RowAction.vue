@@ -1,9 +1,10 @@
 <template>
-  <div style="display: grid;">
-    <div style="background: rgb(239 239 239); padding: 4px; border-radius: 2px; margin-bottom: 2px;">
+  <div v-if="item"
+    class="tree-row"
+    :class="{'is-checked': isChecked}">
       <div
         class="checked"
-        :class="{'is-active': item.state && item.state.checked}"
+        :class="{'is-active': isChecked}"
         @click="onCheck"/>
       <div
         v-if="item.children"
@@ -13,17 +14,19 @@
       <div v-else class="expanded is-blank"></div>
       <span v-for="columnItem in columns"
         :class="'col-'+columnItem.key"
-        :key="columnItem.key">{{ item.columns[columnItem.key].value }}</span>
-    </div>
+        :key="columnItem.key">
+        <template v-if="columnItem"></template>
+        {{ item.columns[columnItem.key].value }}</span>
     <div v-if="$slots.default"
-      style="margin-left: 15px; display: grid;">
+      class="tree-row"
+      style="margin-left: 15px;">
       <slot/>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue'
+import { defineEmits, defineProps, computed } from 'vue'
 import type { RowObject } from "../interfaces/RowObject";
 import type { ColumnObject } from "../interfaces/ColumnObject";
 
@@ -43,15 +46,12 @@ const onExpanded = () => {
   emit("expanded", props.item.id);
 };
 
-const rowClass = computed(() => {
-  return []
-
+const isChecked = computed(() => {
+  return props.item?.state?.checked || false
 });
 
 </script>
 
 <style scoped>
-div {
-  display: flex;
-}
+
 </style>

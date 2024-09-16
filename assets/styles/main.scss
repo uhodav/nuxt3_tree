@@ -5,12 +5,102 @@ body {
   background-color: $primary-color;
 }
 
+$table-cell-padding: 10px;
+$table-header-bg: #f0f0f0;
+$table-border-color: #ddd;
+$table-header-border-color: #ccc;
+$table-row-bg: #fff;
+$table-gap: 2px;
+$tree-checked-size: 18px;
+
+
+$col1-width: 24px;
+$col2-width: 34px;
+$col3-width: 100px;
+$col4-width: auto;
+
+.tree {
+  &-header {
+    display: grid;
+    grid-template-columns: $col1-width $col2-width $col3-width $col4-width;
+    //gap: $table-gap;
+    padding: 2px 10px;
+    background-color: $table-header-bg;
+
+    &_cell {
+      align-items: center;
+      color: #7d7d7d;
+      display: flex;
+      font-size: 12px;
+      font-weight: 700;
+      height: 57px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &-rows {
+    box-shadow: 0 0 1px 0 #c2c2c2;
+    height: 300px;
+    overflow-y: scroll;
+    gap: 2px;
+    display: grid;
+
+    background-color: #adc0d3;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  &-row {
+    display: grid;
+    grid-template-columns: $col1-width $col2-width $col3-width $col4-width;
+    gap: 2px;
+    background: rgb(91 91 91 / 11%);
+    padding: 7px 10px;
+    margin-bottom: 2px;
+    &_cell {
+      padding: $table-cell-padding;
+      background-color: $table-row-bg;
+      border: 1px solid $table-border-color;
+      width: var(--width, auto); // Ширина через переменную
+    }
+    &.is-checked {
+      background: #eef9e9;
+    }
+  }
+  &-text {
+    align-items: center;
+    display: flex;
+    font-size: 18px;
+    font-weight: 700;
+    height: 100%;
+    justify-content: center;
+    width: 100%;
+  }
+
+  // Класс для скрытия первой колонки
+  /*&.hide-col-1 {
+    grid-template-columns:
+      0 // Первая колонка скрыта
+      var(--col-2-width, 70px)
+      repeat(auto-fit, minmax(100px, 1fr));
+  }*/
+}
+
+
+
+
+/*
 .tree {
   &-header {
     display: flex;
     margin-bottom: 2px;
     padding: 5px 4px;
-    background: #f4f6f5;
+    background: white;
+    &_item {
+      background: #f4f6f5;
+    }
     &_check {
       width: 20px;
     }
@@ -25,14 +115,30 @@ body {
 .col-code {
   width: 100px;
   margin-left: 10px;
-}
+}*/
 
 .checked {
   aspect-ratio: 1 / 1;
-  height: 20px;
-  border: 1px solid green;
-  &.is-active {
-    background: green;
+  height: $tree-checked-size;
+  border: 1px solid #6ab42d;
+  border-radius: 4px;
+  background: white;
+  overflow: hidden;
+  &:after {
+    display: block;
+    margin: 2px;;
+    content: '';
+    aspect-ratio: 1 / 1;
+    border-radius: 2px;
+    max-height: calc($tree-checked-size - 4px);
+    background: #6ab42d;
+    //transition: max-height 0.25s ease;
+    transition: .3s;
+    overflow: hidden;
+    transform: scale(0);
+  }
+  &.is-active:after {
+    transform: scale(1);
   }
 }
 
@@ -40,8 +146,8 @@ body {
   margin: 4px;
   transition: all 0.3s ease;
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: 9px;
+  height: 9px;
   border-color: #000;
   border-width: 0 1px 1px 0;
   border-style: solid;

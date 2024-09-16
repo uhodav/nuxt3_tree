@@ -1,9 +1,9 @@
-export interface ColumnItemProps {
+interface ColumnItemProps {
   value: string;
   url: string;
 }
 
-export interface StateItemProps {
+interface StateItemProps {
   expanded: string;
   checked: string;
   finded: string;

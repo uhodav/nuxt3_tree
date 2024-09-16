@@ -2,17 +2,24 @@
   <div>
     <div>
       <button @click="getData">getData</button>
+    </div>
+    <div style="margin: 10px 0">
+      <button @click="getAllChecked('checked')">getAllChecked</button>
+      <label style="margin-left: 10px">
+        <input type="checkbox" v-model="onlyId" />
+        only id: {{ onlyId ? 'on' : 'off' }}
+      </label>
+    </div>
+    <div style="margin: 10px 0">
+      <button @click="traverseUpAndExpand('24222000-6')">find 24222000-6</button>
+    </div>
+    <div>
+      <div>Tree props: </div>
       <label style="margin-left: 10px">
         <input type="checkbox" v-model="parentToChild" />
         parent to child: {{ parentToChild ? 'on' : 'off' }}
       </label>
     </div>
-    <div style="margin: 10px 0">
-      <button @click="getAllChecked('checked')">getAllChecked</button>
-      <button @click="traverseUpAndExpand('24222000-6')">find 24222000-6</button>
-
-    </div>
-    <div class="test-values"> {{ checkedItems }} </div>
     <Tree
       :items="data"
       :columns="columns"
@@ -20,14 +27,17 @@
       @expanded="value => changeProps('expanded', value)"
       @checkAll="changeProps('checked', null)"
       @expandedAll="changeProps('expanded', null)"/>
+    <div class="test-values"> {{ checkedItems }} </div>
   </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue'
 
 const name = 'Index';
 
 const data = ref([])
 const parentToChild = ref(false)
+const onlyId = ref(true)
 const checkedItems = ref([])
 
 const getColumns = ref(['code', 'title'])
@@ -35,12 +45,11 @@ const getColumns = ref(['code', 'title'])
 const columns = ref([
   {
     key: 'code',
-    label: 'code label',
-    width: '100px'
+    label: 'Код',
   },
   {
     key: 'title',
-    label: 'title label',
+    label: 'Назва',
   }
 ])
 
@@ -62,7 +71,7 @@ const changeProps = (mode, id) => {
   });
 }
 const getAllChecked = (mode) => {
-  checkedItems.value = getRowsByProps(['code', 'title'], mode, true)
+  checkedItems.value = getRowsByProps(mode, true, onlyId.value ? null : ['code', 'title'])
 }
 
 
@@ -119,13 +128,16 @@ function updateChildrenProp(nodes, propName, state) {
  * получаем свойство строк по состоянию свойства
  *
  */
-function getRowsByProps(props, propName, propValue) {
+function getRowsByProps(propName, propValue, props) {
   const result = [];
+  props = props ?? []
 
   function findChecked(rows) {
     for (const row of rows) {
       if (row.state && row.state[propName] === propValue) {
-        const values = {};
+        const values = props.length ? {
+          id: row.id
+        } : row.id;
         for (const prop of props) {
           values[prop] = row.columns[prop]?.value || null;
         }
