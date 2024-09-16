@@ -1,39 +1,90 @@
-$primary-color: #42b983;
+$primary-color: #ffffff;
+
+@font-face {
+  font-family: 'GothamPro Regular';
+  src: url('https://test.smarttender.biz/fonts/GothamPro.eot');
+  src: local("GothamPro"), url('https://test.smarttender.biz/fonts/GothamPro.eot?#iefix')
+  format("embedded-opentype"), url('https://test.smarttender.biz/fonts/GothamPro.woff2')
+  format("woff2"), url('https://test.smarttender.biz/fonts/GothamPro.woff')
+  format("woff"), url('https://test.smarttender.biz/fonts/GothamPro.ttf') format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GothamPro Medium';
+  src: url('https://test.smarttender.biz/fonts/GothamProMedium.eot');
+  src: local("GothamProMedium"), url('https://test.smarttender.biz/fonts/GothamProMedium.eot?#iefix')
+  format("embedded-opentype"), url('https://test.smarttender.biz/fonts/GothamProMedium.woff2')
+  format("woff2"), url('https://test.smarttender.biz/fonts/GothamProMedium.woff')
+  format("woff"), url('https://test.smarttender.biz/fonts/GothamProMedium.ttf') format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
   background-color: $primary-color;
+  font-family: "GothamPro Regular", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
+
+*::-webkit-scrollbar {
+  background-color: #e9ecee;
+  height: 10px;
+  width: 8px;
+  padding: 1px 0;
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: #adc0d3;
+  cursor: pointer;
+  margin: 1px 0;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #7A98B4;
+}
+*::-webkit-scrollbar-track {
+  border-radius: 5px;
+  background-color: #e9ecee;
+  padding: 1px 0;
+}
+
 
 $table-cell-padding: 10px;
 $table-header-bg: #f0f0f0;
 $table-border-color: #ddd;
 $table-header-border-color: #ccc;
 $table-row-bg: #fff;
-$table-gap: 2px;
-$tree-checked-size: 18px;
+$table-gap: 1px;
+$table-border-radius: 2px;
+$tree-checked-size: 16px;
 
 
-$col1-width: 24px;
-$col2-width: 34px;
-$col3-width: 100px;
-$col4-width: auto;
+$col1-width: 100px;
+$col2-width: 150px;
+$col3-width: auto;
 
 .tree {
   &-header {
     display: grid;
-    grid-template-columns: $col1-width $col2-width $col3-width $col4-width;
-    //gap: $table-gap;
-    padding: 2px 10px;
-    background-color: $table-header-bg;
+    grid-template-columns: $col1-width $col2-width $col3-width;
+    gap: $table-gap;
+    //padding: 2px 10px;
+    border: 1px solid $table-header-bg;
+    //background-color: $table-header-bg;
+    border-radius: $table-border-radius $table-border-radius 0 0;
 
     &_cell {
+      background-color: #f0f0f0;
       align-items: center;
       color: #7d7d7d;
       display: flex;
+      padding-left: 10px;
       font-size: 12px;
       font-weight: 700;
-      height: 57px;
+      height: 53px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -43,22 +94,29 @@ $col4-width: auto;
   &-rows {
     box-shadow: 0 0 1px 0 #c2c2c2;
     height: 300px;
-    overflow-y: scroll;
+    overflow-y: auto;
     gap: 2px;
     display: grid;
+    border-radius: 0 0 $table-border-radius $table-border-radius;
 
-    background-color: #adc0d3;
-    border-radius: 5px;
-    cursor: pointer;
+    background-color: white;
+    border-radius: 0 0 $table-border-radius $table-border-radius;
   }
 
   &-row {
     display: grid;
-    grid-template-columns: $col1-width $col2-width $col3-width $col4-width;
-    gap: 2px;
-    background: rgb(91 91 91 / 11%);
+    grid-template-columns: $col1-width $col2-width $col3-width;
+    gap: 1px;
+    background: rgb(250 251 255);
     padding: 7px 10px;
-    margin-bottom: 2px;
+
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &_actions {
+      display: flex;
+    }
     &_cell {
       padding: $table-cell-padding;
       background-color: $table-row-bg;
@@ -69,7 +127,7 @@ $col4-width: auto;
       background: #eef9e9;
     }
   }
-  &-text {
+  &-text-info {
     align-items: center;
     display: flex;
     font-size: 18px;
@@ -79,83 +137,60 @@ $col4-width: auto;
     width: 100%;
   }
 
-  // Класс для скрытия первой колонки
-  /*&.hide-col-1 {
-    grid-template-columns:
-      0 // Первая колонка скрыта
-      var(--col-2-width, 70px)
-      repeat(auto-fit, minmax(100px, 1fr));
-  }*/
-}
-
-
-
-
-/*
-.tree {
-  &-header {
+  &-actions {
     display: flex;
-    margin-bottom: 2px;
-    padding: 5px 4px;
-    background: white;
-    &_item {
-      background: #f4f6f5;
-    }
-    &_check {
-      width: 20px;
-    }
-    &_expanded {
-      width: 34px;
-    }
-  }
-  &-rows {
-    background: white;
+    align-items: center;
   }
 }
-.col-code {
-  width: 100px;
-  margin-left: 10px;
-}*/
 
 .checked {
-  aspect-ratio: 1 / 1;
-  height: $tree-checked-size;
-  border: 1px solid #6ab42d;
-  border-radius: 4px;
-  background: white;
-  overflow: hidden;
-  &:after {
-    display: block;
-    margin: 2px;;
-    content: '';
+  &:not(.is-blank) {
     aspect-ratio: 1 / 1;
-    border-radius: 2px;
-    max-height: calc($tree-checked-size - 4px);
-    background: #6ab42d;
-    //transition: max-height 0.25s ease;
-    transition: .3s;
+    cursor: pointer;
+    height: $tree-checked-size;
+    border: 1px solid #6ab42d;
+    border-radius: 4px;
+    background: white;
     overflow: hidden;
-    transform: scale(0);
-  }
-  &.is-active:after {
-    transform: scale(1);
+    &:after {
+      display: block;
+      margin: 2px;;
+      content: '';
+      aspect-ratio: 1 / 1;
+      border-radius: 2px;
+      max-height: calc($tree-checked-size - 4px);
+      background: #6ab42d;
+      transition: .3s;
+      overflow: hidden;
+      transform: scale(0);
+    }
+    &.is-active:after {
+      transform: scale(1);
+    }
+    &.is-disabled {
+      background: #eeeded;
+      cursor: not-allowed;
+      opacity: .5;
+    }
   }
 }
 
 .expanded {
-  margin: 4px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  width: 9px;
-  height: 9px;
-  border-color: #000;
-  border-width: 0 1px 1px 0;
-  border-style: solid;
-  transform: rotate(-45deg);
-  &.is-active {
-    transform: rotate(45deg) translateX(0px) translateY(-5px);
+  margin: auto 0 auto 11px;
+  &:not(.is-blank) {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    align-items: center;
+    display: flex;
+    &.is-active {
+      transform: rotate(90deg);
+    }
   }
   &.is-blank {
     border-color: transparent;
+  }
+  &.is-disabled {
+    cursor: not-allowed;
+    opacity: .5;
   }
 }

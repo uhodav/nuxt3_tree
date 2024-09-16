@@ -2,40 +2,34 @@
   <div v-if="item"
     class="tree-row"
     :class="{'is-checked': isChecked}">
-      <div
-        class="checked"
-        :class="{'is-active': isChecked}"
-        @click="onCheck"/>
-      <div
-        v-if="item.children"
-        class="expanded"
-        :class="{'is-active': item.state && item.state.expanded}"
-        @click="onExpanded"/>
-      <div v-else class="expanded is-blank"></div>
+      <TreeAction
+        :style="`margin-left: ${level * 15}px;`"
+        :options="{
+          checked: useChecked,
+          expanded: item.children && item.children.length
+        }"
+        :disabled="{
+          checked: !useChecked
+        }"
+        :checked="isChecked"
+        :expanded="item.state && item.state.expanded"
+        @checked="onCheck"
+        @expanded="onExpanded"/>
       <span v-for="columnItem in columns"
         :class="'col-'+columnItem.key"
         :key="columnItem.key">
         <template v-if="columnItem"></template>
         {{ item.columns[columnItem.key].value }}</span>
-    <div v-if="$slots.default"
-      class="tree-row"
-      style="margin-left: 15px;">
-      <slot/>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineEmits, defineProps, computed } from 'vue'
-import type { RowObject } from "../interfaces/RowObject";
-import type { ColumnObject } from "../interfaces/ColumnObject";
+import type { TreeRowProps } from "../interfaces/props/TreeRowProps";
 
-const name = 'RowAction';
+const name = 'TreeRow';
 
-const props = defineProps<{
-  item: RowObject,
-  columns: Array<ColumnObject>
-}>()
+const props = defineProps<TreeRowProps>();
 
 const emit = defineEmits(["checked", "expanded"]);
 
@@ -51,7 +45,3 @@ const isChecked = computed(() => {
 });
 
 </script>
-
-<style scoped>
-
-</style>

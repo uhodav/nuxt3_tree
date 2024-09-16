@@ -21,8 +21,10 @@
       </label>
     </div>
     <Tree
+      style="width: 1120px; margin: 0 auto; padding: 10px; 1px solid #f8f8f8;"
       :items="data"
       :columns="columns"
+      useChecked
       @checked="value => changeProps('checked', value)"
       @expanded="value => changeProps('expanded', value)"
       @checkAll="changeProps('checked', null)"
@@ -45,11 +47,11 @@ const getColumns = ref(['code', 'title'])
 const columns = ref([
   {
     key: 'code',
-    label: 'Код',
+    label: 'Код CVP (ДК)',
   },
   {
     key: 'title',
-    label: 'Назва',
+    label: 'Назва категорії',
   }
 ])
 
