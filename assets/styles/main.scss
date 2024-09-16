@@ -173,6 +173,9 @@ $col3-width: auto;
       opacity: .5;
     }
   }
+  &.is-blank {
+    width: 17px;
+  }
 }
 
 .expanded {

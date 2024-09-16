@@ -4,7 +4,7 @@
       <TreeAction
         class="tree-header_cell tree-header_action"
         :options="{
-          checked: useChecked,
+          checked: useChecked && multiSelect,
           expanded: true
         }"
         :disabled="{
@@ -43,7 +43,7 @@ import type { RowObject } from "../interfaces/RowObject";
 import type { ColumnObject } from "../interfaces/ColumnObject";
 import type { TreeProps } from "../interfaces/props/TreeProps";
 
-const name = 'Tree';
+const name = 'TreeRoot';
 
 const emit = defineEmits([
   'update:value',
@@ -73,7 +73,9 @@ const onExpanded = (id: number) => {
 };
 
 const treeText = computed(() => {
-  if (!props.items?.length) {
+  if (props.loading) {
+    return 'Завантаження...'
+  } else if (!props.items?.length) {
     return 'Даних немає'
   }
   return ''

@@ -19,16 +19,22 @@
         <input type="checkbox" v-model="parentToChild" />
         parent to child: {{ parentToChild ? 'on' : 'off' }}
       </label>
+      <label style="margin-left: 10px">
+        <input type="checkbox" v-model="multiSelect" />
+        multiSelect: {{ multiSelect ? 'on' : 'off' }}
+      </label>
     </div>
-    <Tree
+    <TreeRoot
       style="width: 1120px; margin: 0 auto; padding: 10px; 1px solid #f8f8f8;"
       :items="data"
       :columns="columns"
       useChecked
-      @checked="value => changeProps('checked', value)"
-      @expanded="value => changeProps('expanded', value)"
-      @checkAll="changeProps('checked', null)"
-      @expandedAll="changeProps('expanded', null)"/>
+      :loading="loading"
+      :multiSelect="multiSelect"
+      @checked="value => changeChecked(value)"
+      @expanded="value => setProps('expanded', value)"
+      @checkAll="changeChecked"
+      @expandedAll="setProps('expanded')"/>
     <div class="test-values"> {{ checkedItems }} </div>
   </div>
 </template>
@@ -37,9 +43,11 @@ import { ref } from 'vue'
 
 const name = 'Index';
 
-const data = ref([])
+const data = ref<any[]>([])
 const parentToChild = ref(false)
+const multiSelect = ref(false)
 const onlyId = ref(true)
+const loading = ref(false)
 const checkedItems = ref([])
 
 const getColumns = ref(['code', 'title'])
@@ -56,39 +64,51 @@ const columns = ref([
 ])
 
 const getData = async () => {
+  loading.value = true
   try {
     const response: any[] = await $fetch(`/api/get-tree`)
     data.value = response
   } catch (error) {
     console.error('Помилка отримання повідомлень:', error)
+  } finally {
+    loading.value = false
   }
 }
-const changeProps = (mode, id) => {
-  console.log(mode, id)
-  setProps(id, mode).then(() => {
-    console.log('Все обновления завершены');
-    if (mode === 'checked') {
-      getAllChecked(mode)
-    }
-  });
-}
-const getAllChecked = (mode) => {
-  checkedItems.value = getRowsByProps(mode, true, onlyId.value ? null : ['code', 'title'])
+
+const changeChecked = async (id?: number) => {
+  if (!multiSelect.value) {
+    // убираем все отметки
+    await updateChildrenProp(data.value, 'checked', false);
+  }
+  await setProps('checked', id);
+  getAllChecked();
+};
+
+/**
+ * Получить все отмеченные эллементы
+ */
+const getAllChecked = () => {
+  if (!multiSelect.value && checkedItems.value?.length > 1)  {
+
+  }
+  checkedItems.value = getRowsByProps('checked', true, onlyId.value ? null : ['code', 'title'])
 }
 
 
 /**
  * Установить значение в конкретный эллемент
+ * id - ключ эллемента
+ * propName - имя свойства в state
  */
-const setProps = (id, propName) => {
-  return new Promise((resolve) => {
+const setProps = (propName: string, id?: number, all?: boolean) => {
+  return new Promise<void>((resolve) => {
     function findAndUpdate(nodes) {
       for (const node of nodes) {
         if (!id || node.id === id) {
           if (node.state) {
             node.state[propName] = !node.state[propName];
 
-            if (parentToChild.value && Array.isArray(node.children)) {
+            if ((all || parentToChild.value) && Array.isArray(node.children)) {
               updateChildrenProp(node.children, propName, node.state[propName]);
             }
           }
@@ -115,26 +135,31 @@ const setProps = (id, propName) => {
 /**
  * Применяем к детям значение
  */
-function updateChildrenProp(nodes, propName, state) {
-  for (const node of nodes) {
-    if (node.state) {
-      node.state[propName] = state;
+function updateChildrenProp(nodes: any, propName: string, state: any) {
+  return new Promise<void>((resolve) => {
+    for (const node of nodes) {
+      if (node.state) {
+        node.state[propName] = state;
+      }
+      if (Array.isArray(node.children)) {
+        updateChildrenProp(node.children, propName, state);
+      }
     }
-    if (Array.isArray(node.children)) {
-      updateChildrenProp(node.children, propName, state);
-    }
-  }
+    resolve();
+  });
 }
 
 /**
  * получаем свойство строк по состоянию свойства
- *
+ * propName - имя свойства которое ищем
+ * propValue - значение которое ищем
+ * props - массив имен полей которые возвращаем
  */
-function getRowsByProps(propName, propValue, props) {
-  const result = [];
+function getRowsByProps(propName: string, propValue: any, props: string[] | null) {
+  const result: [] = [];
   props = props ?? []
 
-  function findChecked(rows) {
+  function findChecked(rows: [any]) {
     for (const row of rows) {
       if (row.state && row.state[propName] === propValue) {
         const values = props.length ? {
@@ -181,8 +206,6 @@ function traverseUpAndExpand(code) {
 
   findNodeAndExpand(data.value, code);
 }
-
-
 /**Проход сверху вниз (Downward Traversal) */
 function traverseDown(tree, callback) {
   callback(tree);
@@ -193,7 +216,6 @@ function traverseDown(tree, callback) {
     }
   }
 }
-
 /*Проход снизу вверх (Upward Traversal)*/
 function traverseUp(tree, callback) {
   if (Array.isArray(tree.children)) {
@@ -203,6 +225,10 @@ function traverseUp(tree, callback) {
   }
   callback(tree);
 }
+
+onMounted(() => {
+  getData()
+})
 </script>
 <style scoped>
 .test-values {
