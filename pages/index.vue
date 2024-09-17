@@ -1,10 +1,7 @@
 <template>
   <div>
-    <div>
-      <button @click="getData">getData</button>
-    </div>
     <div style="margin: 10px 0">
-      <button @click="traverseUpAndExpand(findCode, 'code', true)">find <input v-model="findCode" /></button>
+      <button @click="traverseUpAndExpand(findCode, 'code', true)">GoTo code <input v-model="findCode" /></button>
     </div>
     <div>
       <div>Tree props: </div>
@@ -44,7 +41,7 @@ const parentToChild = ref(false)
 const multiSelect = ref(false)
 const loading = ref(false)
 const checkedItems = ref<RowObject[]>([])  // выюранные эллементы
-const findCode = ref('24222000-6')
+const findCode = ref('24311120-4')
 
 const getColumns = ref(['code', 'title'])
 
@@ -175,56 +172,71 @@ function getRowsByProps(propName: string, propValue: any) {
 
 //indeterminate
 
-const findNodeAndExpand = (nodes: any, findValue: number | string) => {
-    for (const node of nodes) {
-      if (node.columns[field].value === findValue) {
-        id = node.id
-        node.state.expanded = value;
-        return node;
-      }
 
-      if (Array.isArray(node.children)) {
-        const childNode = findNodeAndExpand(node.children, findValue);
-        if (childNode) {
-          node.state.expanded = value;
-          return node;
-        }
-      }
-    }
-
-    return null;
-  }
-
+///////////////////////// разворот до нужного ////////////////////////////
 /**
- * ищем эллемент с нужным ключем и сворачиваем/разворачиваем всех родителей
+ * Ищет узел и расширяет/сворачивает его и всех родителей.
+ * @param nodes Список узлов для поиска.
+ * @param findValue Значение для поиска.
+ * @param fieldValidate Поле для проверки.
+ * @param newValue Состояние для установки.
+ * @param setNodeExpansion функция для изменения состояния
+ * @returns Найденный узел или null.
  */
-async function traverseUpAndExpand(findValue: number | string, field: string, value: any) {
-  let id: any = null
-  function findNodeAndExpand(nodes: any, findValue: number | string) {
-    for (const node of nodes) {
-      if (node.columns[field].value === findValue) {
-        id = node.id
-        node.state.expanded = value;
-        return node;
-      }
+const findAndExpandNode = (
+  nodes: any[],
+  findValue: number | string,
+  fieldValidate: string,
+  newValue: boolean,
+  setNodeExpansion: Function,
+  isMatchingNode: Function,
+): any | null => {
+  let foundNode: any = null;
 
-      if (Array.isArray(node.children)) {
-        const childNode = findNodeAndExpand(node.children, findValue);
-        if (childNode) {
-          node.state.expanded = value;
-          return node;
-        }
+  for (const node of nodes) {
+    if (isMatchingNode(node, findValue, fieldValidate)) {
+      setNodeExpansion(node, newValue);
+      foundNode = node;
+      break;
+    }
+
+    if (Array.isArray(node.children)) {
+      const childNode = findAndExpandNode(node.children, findValue, fieldValidate, newValue, setNodeExpansion, isMatchingNode);
+      if (childNode) {
+        setNodeExpansion(node, newValue);
+        foundNode = childNode;
+        break;
       }
     }
-    return null;
   }
 
-  await findNodeAndExpand(data.value, findValue);
+  return foundNode;
+};
 
-  scrollToRow(id)
-}
 /**
- * Скролл до эллемента
+ * Расширяет/сворачивает узел и всех его родителей и скроллит до узла.
+ * @param findValue Значение для поиска.
+ * @param fieldValidate Поле для проверки.
+ * @param newValue Состояние для установки.
+ */
+async function traverseUpAndExpand(findValue: number | string, fieldValidate: string, newValue: boolean) {
+  const setNodeExpansion = (node: any, expanded: boolean) => node.state.expanded = expanded;
+  const isMatchingNode = (node: any, findValue: number | string, field: string): boolean =>
+  node.columns[field].value === findValue;
+
+  const node = findAndExpandNode(data.value, findValue, fieldValidate, newValue, setNodeExpansion, isMatchingNode);
+
+  if (node) {
+    setTimeout(() => {
+      scrollToRow(node.id);
+    }, 500);
+  }
+}
+///////////////////////// разворот до нужного ////////////////////////////
+
+/**
+ * Скроллит до указанного элемента.
+ * @param id ID элемента для скролла.
  */
 const scrollToRow = (id: number) => {
   const treeRows = document.querySelector('.tree-rows');
@@ -237,20 +249,21 @@ const scrollToRow = (id: number) => {
     });
 
     targetElement.style.transition = 'opacity 0.5s';
+    targetElement.style.opacity = '0';
 
-    const animateOpacity = () => {
+    setTimeout(() => {
+      targetElement.style.opacity = '1';
+    }, 500);
+
+    setTimeout(() => {
       targetElement.style.opacity = '0';
       setTimeout(() => {
         targetElement.style.opacity = '1';
       }, 500);
-    };
-
-    animateOpacity();
-    setTimeout(() => {
-      animateOpacity();
     }, 1000);
   }
-}
+};
+
 
 const checkedIds = computed(() => {
   if (!checkedItems.value?.length) {
