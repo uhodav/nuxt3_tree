@@ -1,6 +1,7 @@
 <template>
   <div v-if="item"
     class="tree-row"
+    :id="`item-${item.id}`"
     :class="{'is-checked': isChecked}">
       <TreeAction
         :style="`margin-left: ${level * 15}px;`"

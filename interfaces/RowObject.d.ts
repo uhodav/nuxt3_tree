@@ -4,16 +4,16 @@ interface ColumnItemProps {
 }
 
 interface StateItemProps {
-  expanded: string;
-  checked: string;
-  finded: string;
-  disabled: string;
+  [expanded?: string]: boolean;
+  [checked?: string]: boolean;
+  [finded?: string]: boolean;
+  [disabled?: string]: boolean;
 }
 
 export interface RowObject {
   id: number;
   columns: Array<ColumnItemProps>;
-  children: Array<RowObject>;
-  state: StateItemProps;
+  children?: Array<RowObject>;
+  state?: StateItemProps;
   iconType: string;
 }

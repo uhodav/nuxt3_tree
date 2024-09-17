@@ -4,14 +4,7 @@
       <button @click="getData">getData</button>
     </div>
     <div style="margin: 10px 0">
-      <button @click="getAllChecked('checked')">getAllChecked</button>
-      <label style="margin-left: 10px">
-        <input type="checkbox" v-model="onlyId" />
-        only id: {{ onlyId ? 'on' : 'off' }}
-      </label>
-    </div>
-    <div style="margin: 10px 0">
-      <button @click="traverseUpAndExpand('24222000-6')">find 24222000-6</button>
+      <button @click="traverseUpAndExpand(findCode, 'code', true)">find <input v-model="findCode" /></button>
     </div>
     <div>
       <div>Tree props: </div>
@@ -32,23 +25,26 @@
       :loading="loading"
       :multiSelect="multiSelect"
       @checked="value => changeChecked(value)"
-      @expanded="value => setProps('expanded', value)"
+      @expanded="value => setNodeProps('expanded', value)"
       @checkAll="changeChecked"
-      @expandedAll="setProps('expanded')"/>
+      @expandedAll="setNodeProps('expanded')"/>
+    <div class="test-values"> {{ checkedIds }} </div>
     <div class="test-values"> {{ checkedItems }} </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
+import { cloneDeep } from 'lodash';
+import type { RowObject } from "../interfaces/RowObject";
 
 const name = 'Index';
 
-const data = ref<any[]>([])
+const data = ref<RowObject[]>([])
 const parentToChild = ref(false)
 const multiSelect = ref(false)
-const onlyId = ref(true)
 const loading = ref(false)
-const checkedItems = ref([])
+const checkedItems = ref<RowObject[]>([])  // выюранные эллементы
+const findCode = ref('24222000-6')
 
 const getColumns = ref(['code', 'title'])
 
@@ -76,11 +72,11 @@ const getData = async () => {
 }
 
 const changeChecked = async (id?: number) => {
-  if (!multiSelect.value) {
+  if (!multiSelect.value && checkedIds.value.some((i: number) => i !== id)) {
     // убираем все отметки
     await updateChildrenProp(data.value, 'checked', false);
   }
-  await setProps('checked', id);
+  await setNodeProps('checked', id);
   getAllChecked();
 };
 
@@ -88,27 +84,23 @@ const changeChecked = async (id?: number) => {
  * Получить все отмеченные эллементы
  */
 const getAllChecked = () => {
-  if (!multiSelect.value && checkedItems.value?.length > 1)  {
-
-  }
-  checkedItems.value = getRowsByProps('checked', true, onlyId.value ? null : ['code', 'title'])
+  checkedItems.value = getRowsByProps('checked', true)
 }
-
 
 /**
  * Установить значение в конкретный эллемент
  * id - ключ эллемента
  * propName - имя свойства в state
  */
-const setProps = (propName: string, id?: number, all?: boolean) => {
+const setNodeProps = (propName: string, id?: number) => {
   return new Promise<void>((resolve) => {
-    function findAndUpdate(nodes) {
+    function findAndUpdate(nodes: any) {
       for (const node of nodes) {
         if (!id || node.id === id) {
           if (node.state) {
             node.state[propName] = !node.state[propName];
 
-            if ((all || parentToChild.value) && Array.isArray(node.children)) {
+            if (parentToChild.value && Array.isArray(node.children)) {
               updateChildrenProp(node.children, propName, node.state[propName]);
             }
           }
@@ -155,19 +147,20 @@ function updateChildrenProp(nodes: any, propName: string, state: any) {
  * propValue - значение которое ищем
  * props - массив имен полей которые возвращаем
  */
-function getRowsByProps(propName: string, propValue: any, props: string[] | null) {
-  const result: [] = [];
-  props = props ?? []
+function getRowsByProps(propName: string, propValue: any) {
+  const result: RowObject[] = [];
 
-  function findChecked(rows: [any]) {
+  function findChecked(rows: RowObject[]) {
     for (const row of rows) {
       if (row.state && row.state[propName] === propValue) {
-        const values = props.length ? {
-          id: row.id
-        } : row.id;
-        for (const prop of props) {
-          values[prop] = row.columns[prop]?.value || null;
+        const getItem = (item: RowObject) => {
+          const result = cloneDeep(item)
+          delete result.children
+          delete result.state
+          return result
         }
+
+        const values: (RowObject) = getItem(row);
         result.push(values);
       }
       if (Array.isArray(row.children) && row.children.length > 0) {
@@ -180,23 +173,45 @@ function getRowsByProps(propName: string, propValue: any, props: string[] | null
   return result;
 }
 
+//indeterminate
 
-
-/** Тестовые методы на подумать */
-
-/**ищем эллемент с нужным значением и разворачиваем всех родителей */
-function traverseUpAndExpand(code) {
-  function findNodeAndExpand(nodes, code) {
+const findNodeAndExpand = (nodes: any, findValue: number | string) => {
     for (const node of nodes) {
-      if (node.columns.code.value === code) {
-        node.state.expanded = true;
+      if (node.columns[field].value === findValue) {
+        id = node.id
+        node.state.expanded = value;
         return node;
       }
 
       if (Array.isArray(node.children)) {
-        const childNode = findNodeAndExpand(node.children, code);
+        const childNode = findNodeAndExpand(node.children, findValue);
         if (childNode) {
-          node.state.expanded = true; // Проставляем expand родителю
+          node.state.expanded = value;
+          return node;
+        }
+      }
+    }
+
+    return null;
+  }
+
+/**
+ * ищем эллемент с нужным ключем и сворачиваем/разворачиваем всех родителей
+ */
+async function traverseUpAndExpand(findValue: number | string, field: string, value: any) {
+  let id: any = null
+  function findNodeAndExpand(nodes: any, findValue: number | string) {
+    for (const node of nodes) {
+      if (node.columns[field].value === findValue) {
+        id = node.id
+        node.state.expanded = value;
+        return node;
+      }
+
+      if (Array.isArray(node.children)) {
+        const childNode = findNodeAndExpand(node.children, findValue);
+        if (childNode) {
+          node.state.expanded = value;
           return node;
         }
       }
@@ -204,10 +219,51 @@ function traverseUpAndExpand(code) {
     return null;
   }
 
-  findNodeAndExpand(data.value, code);
+  await findNodeAndExpand(data.value, findValue);
+
+  scrollToRow(id)
 }
+/**
+ * Скролл до эллемента
+ */
+const scrollToRow = (id: number) => {
+  const treeRows = document.querySelector('.tree-rows');
+  const targetElement = treeRows?.querySelector(`#item-${id}`);
+
+  if (targetElement) {
+    targetElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+
+    targetElement.style.transition = 'opacity 0.5s';
+
+    const animateOpacity = () => {
+      targetElement.style.opacity = '0';
+      setTimeout(() => {
+        targetElement.style.opacity = '1';
+      }, 500);
+    };
+
+    animateOpacity();
+    setTimeout(() => {
+      animateOpacity();
+    }, 1000);
+  }
+}
+
+const checkedIds = computed(() => {
+  if (!checkedItems.value?.length) {
+    return []
+  }
+  return checkedItems.value.map((i: RowObject) => i.id)
+});
+
+
+/** Тестовые методы на подумать */
+
 /**Проход сверху вниз (Downward Traversal) */
-function traverseDown(tree, callback) {
+function traverseDown(tree: { children: any; }, callback: (arg0: any) => void) {
   callback(tree);
 
   if (Array.isArray(tree.children)) {
@@ -217,7 +273,7 @@ function traverseDown(tree, callback) {
   }
 }
 /*Проход снизу вверх (Upward Traversal)*/
-function traverseUp(tree, callback) {
+function traverseUp(tree: { children: any; }, callback: (arg0: any) => void) {
   if (Array.isArray(tree.children)) {
     for (const child of tree.children) {
       traverseUp(child, callback);
