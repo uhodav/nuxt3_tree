@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div
+    style="width: 1120px; margin: 0 auto; padding: 10px; 1px solid #f8f8f8;">
     <div style="margin: 10px 0">
       <button @click="traverseUpAndExpand(findCode, 'code', true)">GoTo code <input v-model="findCode" /></button>
     </div>
@@ -14,33 +15,41 @@
         multiSelect: {{ multiSelect ? 'on' : 'off' }}
       </label>
     </div>
-    <TreeRoot
-      style="width: 1120px; margin: 0 auto; padding: 10px; 1px solid #f8f8f8;"
+    <TreeSearchInput
       :items="data"
+      @start-search="loading = true"
+      @filtered="filteredResult"
+      @findedId="showFinded"/>
+    <TreeRoot
+      :items="filteredData"
       :columns="columns"
       useChecked
       :loading="loading"
       :multiSelect="multiSelect"
       @checked="value => changeChecked(value)"
-      @expanded="value => setNodeProps('expanded', value)"
+      @expanded="value => setNodeProps(filteredData, 'expanded', value)"
       @checkAll="changeChecked"
-      @expandedAll="setNodeProps('expanded')"/>
+      @expandedAll="setNodeProps(filteredData, 'expanded')">
+      <template v-if="treeText" #treeTextSlot>{{ treeText }}</template>
+    </TreeRoot>
     <div class="test-values"> {{ checkedIds }} </div>
     <div class="test-values"> {{ checkedItems }} </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { cloneDeep } from 'lodash';
 import type { RowObject } from "../interfaces/RowObject";
 
 const name = 'Index';
 
-const data = ref<RowObject[]>([])
-const parentToChild = ref(false)
-const multiSelect = ref(false)
-const loading = ref(false)
-const checkedItems = ref<RowObject[]>([])  // выюранные эллементы
+const data = ref<RowObject[]>([]) // изначальный набор данных
+const filteredData = ref<RowObject[]>([]) // данные для отображения (с учетом строки поиска)
+
+const parentToChild = ref(false)  // признак родителя прокидывать в детей
+const multiSelect = ref(false)  // возможность выбирать несколько значений
+const loading = ref(true) // признак загрузки/обработки данных
+const checkedItems = ref<RowObject[]>([])  // выбранные эллементы
 const findCode = ref('24311120-4')
 
 const getColumns = ref(['code', 'title'])
@@ -61,6 +70,7 @@ const getData = async () => {
   try {
     const response: any[] = await $fetch(`/api/get-tree`)
     data.value = response
+    filteredData.value = response
   } catch (error) {
     console.error('Помилка отримання повідомлень:', error)
   } finally {
@@ -68,12 +78,19 @@ const getData = async () => {
   }
 }
 
+const filteredResult = (val: RowObject[]) => {
+  filteredData.value = val;
+  loading.value = false
+}
+
 const changeChecked = async (id?: number) => {
   if (!multiSelect.value && checkedIds.value.some((i: number) => i !== id)) {
     // убираем все отметки
+    await updateChildrenProp(filteredData.value, 'checked', false);
     await updateChildrenProp(data.value, 'checked', false);
   }
-  await setNodeProps('checked', id);
+
+  await setNodeProps(filteredData.value, 'checked', id);
   getAllChecked();
 };
 
@@ -89,9 +106,10 @@ const getAllChecked = () => {
  * id - ключ эллемента
  * propName - имя свойства в state
  */
-const setNodeProps = (propName: string, id?: number) => {
+const setNodeProps = (dataItems: RowObject[], propName: string, id?: number) => {
   return new Promise<void>((resolve) => {
-    function findAndUpdate(nodes: any) {
+    const findAndUpdate = (nodes: RowObject[]) => {
+
       for (const node of nodes) {
         if (!id || node.id === id) {
           if (node.state) {
@@ -101,13 +119,13 @@ const setNodeProps = (propName: string, id?: number) => {
               updateChildrenProp(node.children, propName, node.state[propName]);
             }
           }
-          if (id) { // если по конкретному свойству, выходим когда нашли
+          if (id) {
             return true;
           }
         }
 
-        if (Array.isArray(node.children)) {
-          if (id && findAndUpdate(node.children)) {
+        if (id && Array.isArray(node.children)) {
+          if (findAndUpdate(node.children)) {
             return true;
           }
         }
@@ -116,7 +134,9 @@ const setNodeProps = (propName: string, id?: number) => {
       return false;
     }
 
-    findAndUpdate(data.value);
+    findAndUpdate(dataItems);
+    //findAndUpdate(data.value);
+    //findAndUpdate(filteredData.value);
     resolve();
   });
 }
@@ -171,7 +191,24 @@ function getRowsByProps(propName: string, propValue: any) {
 }
 
 //indeterminate
+const showFinded = (ids: [number]) => {
+  const setNodeExpansion = (node: any) => node.state.expanded = true;
+  const isMatchingNode = (node: any, id: number): boolean => node.id === id;
+  ids.forEach((id: number) => {
+    findAndExpandNode(filteredData.value, id, 'id', true, setNodeExpansion, isMatchingNode);
+  });
+}
 
+const treeText = computed(() => {
+  if (data.value?.length && !filteredData.value?.length) {
+    return 'На жаль, за вашим запитом нічого не знайдено.'
+  } else if (loading.value) {
+    return 'Завантаження...'
+  } else if (!data.value?.length) {
+    return 'Даних немає'
+  }
+  return null
+});
 
 ///////////////////////// разворот до нужного ////////////////////////////
 /**
@@ -224,7 +261,7 @@ async function traverseUpAndExpand(findValue: number | string, fieldValidate: st
   const isMatchingNode = (node: any, findValue: number | string, field: string): boolean =>
   node.columns[field].value === findValue;
 
-  const node = findAndExpandNode(data.value, findValue, fieldValidate, newValue, setNodeExpansion, isMatchingNode);
+  const node = findAndExpandNode(filteredData.value, findValue, fieldValidate, newValue, setNodeExpansion, isMatchingNode);
 
   if (node) {
     setTimeout(() => {
@@ -264,13 +301,16 @@ const scrollToRow = (id: number) => {
   }
 };
 
-
 const checkedIds = computed(() => {
   if (!checkedItems.value?.length) {
     return []
   }
   return checkedItems.value.map((i: RowObject) => i.id)
 });
+
+
+
+
 
 
 /** Тестовые методы на подумать */

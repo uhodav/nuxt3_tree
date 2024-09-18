@@ -19,21 +19,24 @@
         :key="columnItem.key"
         :class="`tree-header_cell tree-header_${columnItem.key}`">{{ columnItem.label }}</div>
     </div>
-    <div class="tree-rows">
-      <div v-if="treeText"
-        class="tree-text-info">
-        {{ treeText }}
-      </div>
-      <template v-else>
-        <TreeItem v-for="item in items"
-          :key="item.id"
-          :item="item"
-          :level="0"
-          :useChecked="useChecked"
-          :columns="columns"
-          @checked="onCheck"
-          @expanded="onExpanded"/>
-      </template>
+    <div v-if="slots.treeTextSlot"
+      class="tree-info">
+      <span class="tree-info_text">
+        <slot name="treeTextSlot">
+          {{ treeText }}
+        </slot>
+      </span>
+    </div>
+    <div v-else
+      class="tree-rows">
+      <TreeItem v-for="item in items"
+        :key="item.id"
+        :item="item"
+        :level="0"
+        :useChecked="useChecked"
+        :columns="columns"
+        @checked="onCheck"
+        @expanded="onExpanded"/>
     </div>
   </div>
 </template>
@@ -52,6 +55,8 @@ const emit = defineEmits([
   'checkAll',
   'expandedAll'
 ]);
+const instance = getCurrentInstance()
+const slots = instance?.slots || {}
 
 const props = defineProps<TreeProps>();
 
@@ -71,14 +76,4 @@ const onCheck = (id: number) => {
 const onExpanded = (id: number) => {
   emit("expanded", id);
 };
-
-const treeText = computed(() => {
-  if (props.loading) {
-    return 'Завантаження...'
-  } else if (!props.items?.length) {
-    return 'Даних немає'
-  }
-  return ''
-});
-
 </script>

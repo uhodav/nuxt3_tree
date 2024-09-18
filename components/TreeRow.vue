@@ -18,9 +18,8 @@
         @expanded="onExpanded"/>
       <span v-for="columnItem in columns"
         :class="'col-'+columnItem.key"
-        :key="columnItem.key">
-        <template v-if="columnItem"></template>
-        {{ item.columns[columnItem.key].value }}</span>
+        :key="columnItem.key"
+        v-html="item.columns[columnItem.key].value"/>
   </div>
 </template>
 
