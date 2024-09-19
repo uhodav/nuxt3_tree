@@ -6,7 +6,6 @@
       class="checked"
       :class="{'is-active': checked, 'is-disabled': disabled.checked}"
       @click="onSendEvent('checked', !checked)"/>
-    <div v-else class="checked is-blank"></div>
     <div
       v-if="options.expanded"
       class="expanded"

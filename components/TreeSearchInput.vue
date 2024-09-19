@@ -3,7 +3,7 @@
     <div class="tree-search_input"
       :class="{'is-disabled': searching}">
       <input
-        :disabled="!items.length"
+        :disabled="!items || !items.length"
         v-model="findText" />
       <button class="tree-search_button"
         @click="debouncedUpdate(findText)">

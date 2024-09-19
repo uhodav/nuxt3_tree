@@ -1,14 +1,15 @@
 <template>
   <div class="tree">
-    <div class="tree-header">
+    <div class="tree-header"
+      :class="{'not-select': !useChecked}">
       <TreeAction
         class="tree-header_cell tree-header_action"
         :options="{
-          checked: useChecked && multiSelect,
+          checked: useChecked,
           expanded: true
         }"
         :disabled="{
-          checked: !useChecked || !(items && !!items.length),
+          checked: !multiSelect || !useChecked || !(items && !!items.length),
           expanded: !items || !items.length
         }"
         :checked="checkedRoot"
@@ -44,7 +45,7 @@
 import { ref, defineEmits, defineProps, computed } from 'vue'
 import type { RowObject } from "../interfaces/RowObject";
 import type { ColumnObject } from "../interfaces/ColumnObject";
-import type { TreeProps } from "../interfaces/props/TreeProps";
+import type { TreeVisualProps } from "../interfaces/props/TreeVisualProps";
 
 const name = 'TreeRoot';
 
@@ -58,16 +59,18 @@ const emit = defineEmits([
 const instance = getCurrentInstance()
 const slots = instance?.slots || {}
 
-const props = defineProps<TreeProps>();
+const props = defineProps<TreeVisualProps>();
 
 const checkedRoot = ref(false)
 const expandedRoot = ref(true)
 
 const checkAll = () => {
-  emit('checkAll')
+  checkedRoot.value = !checkedRoot.value
+  emit('checkAll', checkedRoot.value)
 }
 const expandedAll = () => {
-  emit('expandedAll')
+  expandedRoot.value = !expandedRoot.value
+  emit('expandedAll', expandedRoot.value)
 }
 
 const onCheck = (id: number) => {

@@ -63,6 +63,7 @@ $tree-checked-size: 16px;
 
 
 $col1-width: 100px;
+$col1-not-select-width: 84px;
 $col2-width: 150px;
 $col3-width: auto;
 
@@ -75,6 +76,9 @@ $col3-width: auto;
     border: 1px solid $table-header-bg;
     //background-color: $table-header-bg;
     border-radius: $table-border-radius $table-border-radius 0 0;
+    &.not-select {
+      grid-template-columns: $col1-not-select-width $col2-width $col3-width;
+    }
 
     &_cell {
       background-color: #f0f0f0;
@@ -114,6 +118,9 @@ $col3-width: auto;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    &.not-select {
+      grid-template-columns: $col1-not-select-width $col2-width $col3-width;
+    }
     &_actions {
       display: flex;
     }
