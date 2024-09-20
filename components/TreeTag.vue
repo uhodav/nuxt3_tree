@@ -44,7 +44,12 @@ const props = defineProps<{
 
 const showAll = ref(false)
 
-const countAllTag = computed(() => props.count ?? props.items?.length);
+const countAllTag = computed(() => {
+  const count = props.items?.length
+  if (!count) return 0
+
+  return count > props.count ? props.count : count
+});
 
 
 const showTags = computed(() => {
