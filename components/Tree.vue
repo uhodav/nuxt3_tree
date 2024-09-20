@@ -90,7 +90,6 @@ const setNodeProps = (dataItems: RowObject[], propName: string, id?: number) => 
       for (const node of nodes) {
         if (!id || node.id === id) {
           if (node.state) {
-            console.log(node.state[propName])
             node.state[propName] = !node.state[propName];
 
             if (props.parentToChild && Array.isArray(node.children)) {

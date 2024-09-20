@@ -12,8 +12,8 @@
       :class="{'is-active': expanded, 'is-disabled': disabled.expanded}"
       @click="onSendEvent('expanded', !expanded)">
       <svg xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
+        width="16"
+        height="16"
         viewBox="0 0 24 24"
         fill="#014a90"
         class="smt-icon">

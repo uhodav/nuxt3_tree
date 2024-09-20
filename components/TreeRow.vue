@@ -2,9 +2,9 @@
   <div v-if="item"
     class="tree-row"
     :id="`item-${item.id}`"
+    :style="`--level: ${level}`"
     :class="{'is-checked': isChecked, 'not-select': !useChecked}">
       <TreeAction
-        :style="`margin-left: ${level * 15}px;`"
         :options="{
           checked: useChecked,
           expanded: item.children && item.children.length

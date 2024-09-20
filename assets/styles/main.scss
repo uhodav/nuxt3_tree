@@ -61,9 +61,13 @@ $table-gap: 1px;
 $table-border-radius: 2px;
 $tree-checked-size: 16px;
 
+$tree-row-background: #FAFBFF;
+$tree-row-background-select: #DFFBD2;
 
-$col1-width: 100px;
-$col1-not-select-width: 84px;
+$margin-children: 18px;
+
+$col1-width: 110px;
+$col1-not-select-width: 80px;
 $col2-width: 150px;
 $col3-width: auto;
 
@@ -81,14 +85,14 @@ $col3-width: auto;
     }
 
     &_cell {
-      background-color: #f0f0f0;
+      background-color: #F4F6F5;
       align-items: center;
-      color: #7d7d7d;
+      color: #4A4A4A;
       display: flex;
       padding-left: 10px;
       font-size: 12px;
       font-weight: 700;
-      height: 53px;
+      height: 42px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -104,14 +108,15 @@ $col3-width: auto;
     border-radius: 0 0 $table-border-radius $table-border-radius;
 
     background-color: white;
-    border-radius: 0 0 $table-border-radius $table-border-radius;
   }
 
   &-row {
     display: grid;
-    grid-template-columns: $col1-width $col2-width $col3-width;
+    border-radius: 0 0 $table-border-radius $table-border-radius;
+    margin-left: calc(var(--level) * $margin-children);
+    grid-template-columns: calc(110px - (var(--level) * $margin-children)) $col2-width $col3-width;
     gap: 1px;
-    background: rgb(250 251 255);
+    background: $tree-row-background;
     padding: 7px 10px;
 
     font-size: 12px;
@@ -131,7 +136,7 @@ $col3-width: auto;
       width: var(--width, auto); // Ширина через переменную
     }
     &.is-checked {
-      background: #eef9e9;
+      background: $tree-row-background-select;
     }
   }
   &-info {
@@ -236,7 +241,7 @@ $col3-width: auto;
 }
 
 .expanded {
-  margin: auto 0 auto 11px;
+  margin: auto 0 auto 9px;
   &:not(.is-blank) {
     transition: all 0.3s ease;
     cursor: pointer;
