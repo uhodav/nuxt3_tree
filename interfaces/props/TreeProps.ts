@@ -7,6 +7,7 @@ export interface TreeProps {
   columns?: Array<ColumnObject>
   useChecked?: boolean
   useSearch?: boolean
+  useTags?: boolean
   multiSelect?: boolean
   loading?: boolean
   parentToChild?: boolean

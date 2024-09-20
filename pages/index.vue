@@ -19,6 +19,10 @@
         use search: {{ useSearch ? 'on' : 'off' }}
       </label>
       <label style="margin-left: 10px">
+        <input type="checkbox" v-model="useTags" />
+        use tags: {{ useTags ? 'on' : 'off' }}
+      </label>
+      <label style="margin-left: 10px">
         <input type="checkbox" v-model="useChecked" />
         use checked: {{ useChecked ? 'on' : 'off' }}
       </label>
@@ -32,9 +36,9 @@
       :parentToChild="parentToChild"
       :useChecked="useChecked"
       :useSearch="useSearch"
+      :useTags="useTags"
       :multiSelect="multiSelect"
       @update:value="val => checkedItems = val"/>
-    <div class="test-values"> {{ checkedItems }} </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -51,6 +55,7 @@ const loading = ref(true) // признак загрузки/обработки 
 const parentToChild = ref(false)  // признак родителя прокидывать в детей
 const useChecked = ref(true)  // отображение выбора эллементов
 const useSearch = ref(true)  // отображение поиска
+const useTags = ref(true)  // отображение тегов
 const multiSelect = ref(false)  // возможность выбирать несколько значений
 
 const checkedItems = ref<RowObject[]>([])  // выбранные эллементы
@@ -109,8 +114,4 @@ onMounted(() => {
 
 </script>
 <style scoped>
-.test-values {
-  max-height: 200px;
-  overflow: auto;
-}
 </style>

@@ -62,7 +62,11 @@ $table-border-radius: 2px;
 $tree-checked-size: 16px;
 
 $tree-row-background: #FAFBFF;
+$tree-row-background-focus: #EDF2F7;
 $tree-row-background-select: #DFFBD2;
+$tree-row-background-select-focus: #c0efa9;
+$tree-row-background-finded: #E0F0FF;
+$tree-row-background-finded-focus: #bedcf7;
 
 $margin-children: 18px;
 
@@ -118,6 +122,7 @@ $col3-width: auto;
     gap: 1px;
     background: $tree-row-background;
     padding: 7px 10px;
+    transition: 0.25s all;
 
     font-size: 12px;
     overflow: hidden;
@@ -137,6 +142,22 @@ $col3-width: auto;
     }
     &.is-checked {
       background: $tree-row-background-select;
+      &:hover,
+      &:focus {
+        background: $tree-row-background-select-focus;
+      }
+    }
+    &.is-finded {
+      background: $tree-row-background-finded;
+      &:hover,
+      &:focus {
+        background: $tree-row-background-finded-focus;
+      }
+
+    }
+    &:hover,
+    &:focus {
+      background: $tree-row-background-focus;
     }
   }
   &-info {
@@ -162,18 +183,33 @@ $col3-width: auto;
     &_input {
       width: 100%;
       position: relative;
+      border-radius: 27px;
+      display: flex;
+      border: 1px solid #adc0d3;
+      &-icon {
+        margin: auto 0 auto 12px;
+      }
+      &-clear {
+        cursor: pointer;
+        margin: auto 10px auto 0;
+      }
       input {
         width: 100%;
-        height: 100%;
+        height: 32px;
         outline: none;
         line-height: 0;
-        font-size: 16px;
+        font-size: 14px;
+        padding: 3px 15px;
+        color: #4A4A4A;
         background: #FFF;
-        padding: 12px 52px 11px 19px;
         box-sizing: border-box;
         border-radius: 27px;
-        border: 1px solid #adc0d3;
-        box-shadow: 0px 1px 4px 0px #B9CFE8;
+        border: transparent;
+      }
+      &:hover,
+      &:focus,
+      &.has-value {
+        border: 1px solid #6AB42D;
       }
     }
     &_button {
@@ -194,12 +230,47 @@ $col3-width: auto;
       font-size: 16px;
       align-items: center;
       display: flex;
-      height: 36px;
+      height: 24px;
       width: 100%;
     }
     &.is-disabled {
       &_button {
         opacity: 0.5;
+      }
+    }
+  }
+
+  &-tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    &_item {
+      align-items: center;
+      background: #e1ebf4;
+      border-radius: 30px;
+      display: flex;
+      height: -moz-max-content;
+      height: max-content;
+      justify-content: space-between;
+      margin: 5px 12px 5px 0;
+      max-width: 250px;
+      padding: 3px 2px 3px 10px;
+      position: relative;
+      &-content {
+        font-size: 12px;
+        line-height: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 10px;
+      }
+      &-clear {
+        background: #adc0d3;
+        height: 16px;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        align-items: center;
+        cursor: pointer;
       }
     }
   }

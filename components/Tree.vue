@@ -18,6 +18,11 @@
       @expandedAll="setNodeProps(filteredData, 'expanded')">
       <template v-if="treeText" #treeTextSlot>{{ treeText }}</template>
     </TreeVisual>
+    <TreeTag
+      v-if="useTags"
+      :items="checkedItems"
+      @click-tag="val => traverseUpAndExpand(val.columns.code.value, 'code', true)"
+      @delete-tag="val => changeChecked(val.id)"/>
   </div>
 </template>
 <script setup lang="ts">
@@ -29,7 +34,9 @@ const name = 'Tree';
 
 const props = defineProps<TreeProps>();
 const emit = defineEmits([
-  'update:value'
+  'update:value',
+  'click-tag',
+  'delete-tag'
 ]);
 
 const checkedItems = ref<RowObject[]>([])  // выбранные эллементы
