@@ -273,6 +273,35 @@ $col3-width: auto;
         cursor: pointer;
       }
     }
+    &_more {
+      word-spacing: 1px;
+      word-break: break-word;
+      align-items: center;
+      border-radius: 30px;
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 12px 5px 0;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px #014a90;
+      color: #014a90;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 0;
+      padding: 3px 8px;
+      &-icon {
+        height: 13px;
+        width: 17px;
+        transition: 0.25s all;
+        transform: rotate(180deg);
+        &.is-show {
+          transform: rotate(0deg);
+        }
+      }
+    }
   }
 }
 

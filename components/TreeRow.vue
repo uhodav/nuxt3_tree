@@ -3,15 +3,13 @@
     class="tree-row"
     :id="`item-${item.id}`"
     :style="`--level: ${level}`"
-    :class="{'is-checked': isChecked, 'is-finded': isFinded, 'not-select': !useChecked}">
+    :class="rowClasses">
       <TreeAction
         :options="{
           checked: useChecked,
           expanded: item.children && item.children.length
         }"
-        :disabled="{
-          checked: !useChecked
-        }"
+        :disabled="disabledActions"
         :checked="isChecked"
         :expanded="item.state && item.state.expanded"
         @checked="onCheck"
@@ -47,4 +45,13 @@ const isChecked = computed(() => {
   return props.item?.state?.checked || false
 });
 
+const disabledActions = computed(() => ({
+  checked: !props.useChecked
+}));
+
+const rowClasses = computed(() => ({
+  'is-checked': isChecked,
+  'is-finded': isFinded,
+  'not-select': !props.useChecked
+}));
 </script>

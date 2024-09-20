@@ -8,17 +8,15 @@
           checked: useChecked,
           expanded: true
         }"
-        :disabled="{
-          checked: !multiSelect || !useChecked || !(items && !!items.length),
-          expanded: !items || !items.length
-        }"
+        :disabled="disabledActions"
         :checked="checkedRoot"
         :expanded="expandedRoot"
         @checked="checkAll"
         @expanded="expandedAll"/>
       <div v-for="columnItem in columns"
         :key="columnItem.key"
-        :class="`tree-header_cell tree-header_${columnItem.key}`">{{ columnItem.label }}</div>
+        class="tree-header_cell"
+        :class="`tree-header_${columnItem.key}`">{{ columnItem.label }}</div>
     </div>
     <div v-if="slots.treeTextSlot"
       class="tree-info">
@@ -79,4 +77,9 @@ const onCheck = (id: number) => {
 const onExpanded = (id: number) => {
   emit("expanded", id);
 };
+
+const disabledActions = computed(() => ({
+  checked: !(props.multiSelect && props.useChecked && props.items?.length),
+  expanded: !props.items?.length
+}));
 </script>

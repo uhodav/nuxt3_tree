@@ -15,12 +15,14 @@
       @checked="value => changeChecked(value)"
       @expanded="value => setNodeProps(filteredData, 'expanded', value)"
       @checkAll="changeChecked"
-      @expandedAll="setNodeProps(filteredData, 'expanded')">
+      @expandedAll="expandAll">
       <template v-if="treeText" #treeTextSlot>{{ treeText }}</template>
     </TreeVisual>
     <TreeTag
       v-if="useTags"
       :items="checkedItems"
+      :limit="10"
+      :count="30"
       @click-tag="val => traverseUpAndExpand(val.columns.code.value, 'code', true)"
       @delete-tag="val => changeChecked(val.id)"/>
   </div>
@@ -52,7 +54,6 @@ onMounted(async () => {
 });
 
 watch(() => props.items, (newValue) => {
-  console.log('onMounted', newValue)
   filteredData.value = newValue
 })
 const filteredResult = (val: RowObject[]) => {
@@ -60,13 +61,18 @@ const filteredResult = (val: RowObject[]) => {
   innerLoading.value = false
 }
 
+const expandAll = (state: boolean) => {
+  filteredData.value?.forEach((childrenItem: RowObject) => {
+    setNodeProps(filteredData.value, 'expanded', childrenItem.id, state)
+  })
+}
+
 const changeChecked = async (id?: number) => {
-  if (!props.multiSelect && checkedIds.value.some((i: number) => i !== id)) {
+  if (!props.multiSelect && !props.parentToChild && checkedIds.value.some((i: number) => i !== id)) {
     // убираем все отметки
     await updateChildrenProp(filteredData.value, 'checked', false);
     await updateChildrenProp(props.items, 'checked', false);
   }
-
   await setNodeProps(filteredData.value, 'checked', id);
   getAllChecked();
 };
@@ -90,14 +96,18 @@ const getAllChecked = () => {
  * id - ключ эллемента
  * propName - имя свойства в state
  */
-const setNodeProps = (dataItems: RowObject[], propName: string, id?: number) => {
+const setNodeProps = (dataItems: RowObject[], propName: string, id?: number, value?: boolean) => {
   return new Promise<void>((resolve) => {
     const findAndUpdate = (nodes: RowObject[]) => {
 
       for (const node of nodes) {
         if (!id || node.id === id) {
           if (node.state) {
-            node.state[propName] = !node.state[propName];
+            node.state[propName] = value ?? !node.state[propName];
+
+            if (propName === 'checked' && node.state[propName]) {
+              node.state.expanded = true
+            }
 
             if (props.parentToChild && Array.isArray(node.children)) {
               updateChildrenProp(node.children, propName, node.state[propName]);

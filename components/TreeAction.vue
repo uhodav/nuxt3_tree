@@ -4,13 +4,13 @@
     <div
       v-if="options.checked"
       class="checked"
-      :class="{'is-active': checked, 'is-disabled': disabled.checked}"
-      @click="onSendEvent('checked', !checked)"/>
+      :class="checkedClasses"
+      @click="clickChecked"/>
     <div
       v-if="options.expanded"
       class="expanded"
-      :class="{'is-active': expanded, 'is-disabled': disabled.expanded}"
-      @click="onSendEvent('expanded', !expanded)">
+      :class="expandedClasses"
+      @click="clickExpanded">
       <svg xmlns="http://www.w3.org/2000/svg"
         width="16"
         height="16"
@@ -31,8 +31,27 @@ import type { TreeActionProps } from "../interfaces/props/TreeActionProps";
 const props = defineProps<TreeActionProps>();
 
 const emit = defineEmits(["checked", "expanded"]);
+type EmitType = typeof emit;
 
-const onSendEvent = (eventName: string, state: Boolean) => {
+const onSendEvent = (eventName: Parameters<EmitType>[0], state: Boolean) => {
   emit(eventName, state);
 }
+
+const clickChecked = () => {
+  if (props.disabled?.checked) return
+  onSendEvent('checked', !props.checked)
+}
+const clickExpanded = () => {
+  if (props.disabled?.expanded) return
+  onSendEvent('expanded', !props.expanded)
+}
+
+const checkedClasses = computed(() => ({
+  'is-active': props.checked,
+  'is-disabled': props.disabled?.checked
+}));
+const expandedClasses = computed(() => ({
+  'is-active': props.expanded,
+  'is-disabled': props.disabled?.expanded
+}));
 </script>

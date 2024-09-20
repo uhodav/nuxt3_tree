@@ -6,5 +6,5 @@ export interface TreeRowProps {
   item: RowObject
   columns?: Array<ColumnObject>
   useChecked: Boolean
-  level: number // Уровень вложения
+  level?: number // Уровень вложения
 }

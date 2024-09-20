@@ -10,7 +10,7 @@ interface TreeActionShowProps {
 
 export interface TreeActionProps {
   options: TreeActionShowProps
-  disabled: TreeActionShowProps
-  checked: Boolean
-  expanded: Boolean
+  disabled?: TreeActionShowProps
+  checked?: Boolean
+  expanded?: Boolean
 }
