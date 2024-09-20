@@ -41,40 +41,24 @@ const props = defineProps<{
   items: RowObject[];
 }>();
 
-const debouncedUpdate = debounce((value: string) => {
-  emit('start-search');
-  searching.value = true
-  let filteredItems = props.items
-  findedId.value = []
-  if (value) {
-    filteredItems = filterItems(props.items, value)
-  } else {
-    filteredItems = resetItems(props.items)
-  }
-  emit('filtered', filteredItems);
-  emit('findedId', findedId.value);
-  searching.value = false
-}, 300);
+const prepareHighlightRegex = (text: string) => new RegExp(`(${text})`, 'gi');
 
-const highlightMatch = (text: string, searchText: string): string => {
-  const index = text.toLowerCase().indexOf(searchText);
-  if (index === -1) return text;
-  const beforeMatch = text.slice(0, index);
-  const match = text.slice(index, index + searchText.length);
-  const afterMatch = text.slice(index + searchText.length);
-  return `${beforeMatch}<b>${match}</b>${afterMatch}`;
-};
-const removeHighlight = (text: string): string => {
-  return text.replace(/<\/?b>/g, '');
+const highlightMatch = (text: string, regex: RegExp): string => {
+  return text.replace(regex, '<b>$1</b>');
 };
 
 const resetItems = (items: RowObject[]): RowObject[] => {
   const resetItemsRecursive = (nodes: RowObject[]): RowObject[] => {
     return nodes.filter(node => {
-      node.columns.code.value = removeHighlight(node.columns.code.value);
-      node.columns.title.value = removeHighlight(node.columns.title.value);
-      node.state.finded = false
-      node.state.expanded = false
+      // Only reset fields that need to be reset to avoid unnecessary writes
+      if (node.columns.code.value.includes('<b>')) {
+        node.columns.code.value = node.columns.code.value.replace(/<\/?b>/g, '');
+      }
+      if (node.columns.title.value.includes('<b>')) {
+        node.columns.title.value = node.columns.title.value.replace(/<\/?b>/g, '');
+      }
+      node.state.finded = false;
+      node.state.expanded = false;
 
       if (Array.isArray(node.children)) {
         const filteredChildren = resetItemsRecursive(node.children);
@@ -91,28 +75,29 @@ const resetItems = (items: RowObject[]): RowObject[] => {
   return resetItemsRecursive(items);
 }
 
-const filterItems = (items: RowObject[], findText: string): RowObject[] => {
-  const searchText = findText.toLowerCase();
+const filterItems = (items: RowObject[], searchText: string): RowObject[] => {
+  const searchRegex = prepareHighlightRegex(searchText);
 
   const filterRecursive = (nodes: RowObject[]): RowObject[] => {
     return nodes.filter(node => {
-      const codeContainsText = node.columns.code.value.toLowerCase().includes(searchText);
-      const titleContainsText = node.columns.title.value.toLowerCase().includes(searchText);
+      const codeContainsText = searchRegex.test(node.columns.code.value);
+      const titleContainsText = searchRegex.test(node.columns.title.value);
 
       if (codeContainsText) {
-        node.columns.code.value = highlightMatch(node.columns.code.value, searchText);
+        node.columns.code.value = highlightMatch(node.columns.code.value, searchRegex);
       } else {
-        node.columns.code.value = removeHighlight(node.columns.code.value);
+        node.columns.code.value = node.columns.code.value.replace(/<\/?b>/g, '');
       }
 
       if (titleContainsText) {
-        node.columns.title.value = highlightMatch(node.columns.title.value, searchText);
+        node.columns.title.value = highlightMatch(node.columns.title.value, searchRegex);
       } else {
-        node.columns.title.value = removeHighlight(node.columns.title.value);
+        node.columns.title.value = node.columns.title.value.replace(/<\/?b>/g, '');
       }
+
       if (codeContainsText || titleContainsText) {
-        node.state.finded = true
-        findedId.value = [...findedId.value, node.id]
+        node.state.finded = true;
+        findedId.value.push(node.id);
         return true;
       }
 
@@ -130,9 +115,26 @@ const filterItems = (items: RowObject[], findText: string): RowObject[] => {
 
   return filterRecursive(items);
 }
+
+const debouncedUpdate = debounce((value: string) => {
+  emit('start-search');
+  searching.value = true;
+
+  let filteredItems = props.items;
+  findedId.value = [];
+
+  if (value) {
+    filteredItems = filterItems(props.items, value.toLowerCase());
+  } else {
+    filteredItems = resetItems(props.items);
+  }
+
+  emit('filtered', filteredItems);
+  emit('findedId', findedId.value);
+  searching.value = false;
+}, 300);
+
 watch(findText, (newValue) => {
   debouncedUpdate(newValue);
 });
 </script>
-<style scoped>
-</style>

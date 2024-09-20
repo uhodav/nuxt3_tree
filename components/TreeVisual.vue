@@ -60,7 +60,7 @@ const slots = instance?.slots || {}
 const props = defineProps<TreeVisualProps>();
 
 const checkedRoot = ref(false)
-const expandedRoot = ref(true)
+const expandedRoot = ref(false)
 
 const checkAll = () => {
   checkedRoot.value = !checkedRoot.value

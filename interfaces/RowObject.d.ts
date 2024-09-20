@@ -12,7 +12,7 @@ interface StateItemProps {
 
 export interface RowObject {
   id: number;
-  columns: Array<ColumnItemProps>;
+  columns: Object<ColumnItemProps>;
   children?: Array<RowObject>;
   state?: StateItemProps;
   iconType: string;

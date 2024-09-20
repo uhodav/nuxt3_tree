@@ -14,8 +14,8 @@
       :multiSelect="multiSelect"
       @checked="value => changeChecked(value)"
       @expanded="value => setNodeProps(filteredData, 'expanded', value)"
-      @checkAll="changeChecked"
-      @expandedAll="expandAll">
+      @checkAll="val => changeAll('checked', val)"
+      @expandedAll="val => changeAll('expanded', val)">
       <template v-if="treeText" #treeTextSlot>{{ treeText }}</template>
     </TreeVisual>
     <TreeTag
@@ -45,9 +45,6 @@ const checkedItems = ref<RowObject[]>([])  // выбранные эллемен�
 
 const innerLoading = ref(false) // признак загрузки/обработки данных
 const filteredData = ref<RowObject[]>([]) // данные для отображения (с учетом строки поиска)
-/*const filteredData = computed(() => {
-  return props.items;
-});*/
 
 onMounted(async () => {
   filteredData.value = props.items
@@ -61,9 +58,9 @@ const filteredResult = (val: RowObject[]) => {
   innerLoading.value = false
 }
 
-const expandAll = (state: boolean) => {
+const changeAll = (propName: string, state: boolean) => {
   filteredData.value?.forEach((childrenItem: RowObject) => {
-    setNodeProps(filteredData.value, 'expanded', childrenItem.id, state)
+    setNodeProps(filteredData.value, propName, childrenItem.id, state)
   })
 }
 
