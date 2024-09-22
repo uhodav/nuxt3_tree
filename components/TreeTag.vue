@@ -4,8 +4,8 @@
       class="tree-tags_item"
       @click="emit('click-tag', item)">
       <span class="tree-tags_item-content">
-        <template v-if="item.columns.code">{{ item.columns.code.value }}</template>
-        <template v-if="item.columns.title">{{ item.columns.title.value }}</template>
+        <span v-if="item.columns.code" v-html="item.columns.code.value"/>
+        <span v-if="item.columns.title" v-html="item.columns.title.value"/>
       </span>
       <div class="tree-tags_item-clear"
         @click.stop="emit('delete-tag', item)"/>
@@ -31,14 +31,8 @@ const emit = defineEmits(['click-tag', 'delete-tag']);
 
 const props = defineProps<{
   items: RowObject[],
-  limit: {
-    type: number,
-    default: 10,
-  },
-  count?: {
-    type: number,
-    default: 30,
-  },
+  limit: number,
+  count?: number,
 }>();
 
 const showAll = ref(false);

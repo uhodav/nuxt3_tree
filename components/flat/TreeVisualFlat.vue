@@ -28,24 +28,33 @@
     </div>
     <div v-else
       class="tree-rows">
-      <TreeItem v-for="item in items"
+    <RecycleScroller
+      v-slot="{ item }"
+      :items="showData"
+      :item-size="30"
+      style="height: 300px">
+      <TreeItemFlat
         :key="item.id"
         :item="item"
-        :level="0"
         :useChecked="useChecked"
         :columns="columns"
         @checked="onCheck"
         @expanded="onExpanded"/>
+    </RecycleScroller>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, defineEmits, defineProps, computed } from 'vue'
-import type { RowObject } from "../interfaces/RowObject";
-import type { ColumnObject } from "../interfaces/ColumnObject";
-import type { TreeVisualProps } from "../interfaces/props/TreeVisualProps";
+import type { RowObject } from "../../interfaces/RowObject";
+import type { ColumnObject } from "../../interfaces/ColumnObject";
+import type { TreeVisualProps } from "../../interfaces/props/TreeVisualProps";
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+import { RecycleScroller } from 'vue-virtual-scroller';
 
-const name = 'TreeVisual';
+import TreeItemFlat from './TreeItemFlat.vue'
+
+const name = 'TreeVisualFlat';
 
 const emit = defineEmits([
   'update:value',
@@ -60,7 +69,23 @@ const slots = instance?.slots || {}
 const props = defineProps<TreeVisualProps>();
 
 const checkedRoot = ref(false)
-const expandedRoot = ref(false)
+const expandedRoot = ref(true)
+
+const showData = computed(() => {
+  return props.items.filter(i => filterItem(i))
+});
+const filterItem = (item: RowObject) => {
+  if (!item) {
+    return false
+  }
+  /*if (item.level === 0) {
+    return true
+  }*/
+  if (item.state.show || item.state.finded) {
+    return true
+  }
+  return false
+};
 
 const checkAll = () => {
   checkedRoot.value = !checkedRoot.value
@@ -71,11 +96,11 @@ const expandedAll = () => {
   emit('expandedAll', expandedRoot.value)
 }
 
-const onCheck = (id: number) => {
-  emit("checked", id);
+const onCheck = (id: number, state: boolean) => {
+  emit("checked", id, state);
 };
-const onExpanded = (id: number) => {
-  emit("expanded", id);
+const onExpanded = (id: number, state: boolean) => {
+  emit("expanded", id, state);
 };
 
 const disabledActions = computed(() => ({

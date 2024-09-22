@@ -1,9 +1,6 @@
 <template>
   <div
     style="width: 1120px; margin: 0 auto; padding: 10px; 1px solid #f8f8f8;">
-    <div style="margin: 10px 0">
-      <button @click="traverseUpAndExpand(findCode, 'code', true)">GoTo code <input v-model="findCode" /></button>
-    </div>
     <div>
       <div>Tree props: </div>
       <label style="margin-left: 10px">
@@ -26,14 +23,19 @@
         <input type="checkbox" v-model="useChecked" />
         use checked: {{ useChecked ? 'on' : 'off' }}
       </label>
+      <label style="margin-left: 10px">
+        <input type="checkbox" v-model="openAfterSelect" />
+        open after select: {{ openAfterSelect ? 'on' : 'off' }}
+      </label>
     </div>
-    <Tree
+    <TreeFlat
       ref="treeRef"
       :items="data"
       :value="checkedItems"
       :columns="columns"
       :loading="loading"
       :parentToChild="parentToChild"
+      :openAfterSelect="openAfterSelect"
       :useChecked="useChecked"
       :useSearch="useSearch"
       :useTags="useTags"
@@ -44,6 +46,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { RowObject } from "../interfaces/RowObject";
+import TreeFlat from './components/flat/TreeFlat.vue'
 
 const name = 'Index';
 
@@ -54,6 +57,7 @@ const data = ref<RowObject[]>([]) // изначальный набор данн�
 const loading = ref(true) // признак загрузки/обработки данных
 const parentToChild = ref(false)  // признак родителя прокидывать в детей
 const useChecked = ref(true)  // отображение выбора эллементов
+const openAfterSelect = ref(false)  // разворачивать после выбора
 const useSearch = ref(true)  // отображение поиска
 const useTags = ref(true)  // отображение тегов
 const multiSelect = ref(false)  // возможность выбирать несколько значений
@@ -113,5 +117,3 @@ onMounted(() => {
 }*/
 
 </script>
-<style scoped>
-</style>

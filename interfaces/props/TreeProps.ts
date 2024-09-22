@@ -10,5 +10,6 @@ export interface TreeProps {
   useTags?: boolean
   multiSelect?: boolean
   loading?: boolean
-  parentToChild?: boolean
+  parentToChild?: boolean,
+  openAfterSelect?: boolean,
 }

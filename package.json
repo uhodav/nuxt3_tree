@@ -13,7 +13,8 @@
     "lodash": "^4.17.21",
     "nuxt": "^3.13.0",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "vue-virtual-scroller": "next"
   },
   "devDependencies": {
     "@nuxt/types": "^2.18.1",

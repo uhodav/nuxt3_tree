@@ -148,7 +148,7 @@ $col3-width: auto;
         background: $tree-row-background-select-focus;
       }
     }
-    &.is-finded {
+    &.is-finded:not(.is-checked) {
       background: $tree-row-background-finded;
       &:hover,
       &:focus {
@@ -264,6 +264,8 @@ $col3-width: auto;
         text-overflow: ellipsis;
         white-space: nowrap;
         margin-right: 10px;
+        display: flex;
+        gap: 4px;
       }
       &-clear {
         background: #adc0d3;
