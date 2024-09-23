@@ -36,7 +36,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { cloneDeep } from 'lodash';
+import { cloneDeep, debounce } from 'lodash';
 import type { RowObject } from "../../interfaces/RowObject";
 import type { TreeProps } from "../../interfaces/props/TreeProps";
 
@@ -85,7 +85,7 @@ const flattenTree = (data: RowObject[], level = 0, parentId = null) => {
     return acc;
   }, []);
 
-  return result//.filter(i => filterItem(i))
+  return result
 };
 
 const clickTag = (tag: RowObject) => {
@@ -107,16 +107,9 @@ const changeAll = (propName: string, state: boolean) => {
   }
 }
 
-const checkedIds = computed(() => {
-  if (!checkedItems.value?.length) {
-    return []
-  }
-  return checkedItems.value.map((i: RowObject) => i.id)
-});
-
-
 const prepareHighlightRegex = (text: string) => new RegExp(`(${text})`, 'gi');
 const highlightMatch = (text: string, regex: RegExp): string => {
+  text = text.replace(/<\/?b>/g, '')
   return text.replace(regex, '<b>$1</b>');
 };
 
@@ -128,6 +121,9 @@ const clearState = () => {
   flatData.value.filter(item => !item.parentId).map(i => i.state.show = true)
 }
 
+/**
+ * ищем ветки дерева и заполняем массив findedItems
+ */
 const startSearch = async (searchText: string) => {
   innerLoading.value = true
   flatData.value.map(i => i.state.finded = false)
@@ -136,16 +132,18 @@ const startSearch = async (searchText: string) => {
     filteredData.value = flatData.value
     innerLoading.value = false
   } else {
-    //await changeProp(flatData.value, 'show', false)
     const searchRegex = prepareHighlightRegex(searchText);
-    const checkContainsText = (node: RowObject, value: string)=> searchRegex.test(value);
+    const checkContainsText = (value: string)=> {
+      value = value.replace(/<\/?b>/g, '')
+      return searchRegex.test(value);
+    }
 
     findedItems.value = flatData.value.filter(node => {
       let codeContainsText
       let titleContainsText
       try {
-        codeContainsText = checkContainsText(node, node.columns?.code?.value);
-        titleContainsText = checkContainsText(node, node.columns?.title?.value);
+        codeContainsText = checkContainsText(node.columns?.code?.value);
+        titleContainsText = checkContainsText(node.columns?.title?.value);
       } catch(e) {
       }
       if (codeContainsText) {
@@ -169,13 +167,13 @@ const startSearch = async (searchText: string) => {
     })
 
     if (findedItems.value?.length) {
-      await changeProp(findedItems.value, 'finded', true)
+      changeProp(findedItems.value, 'finded', true)
       findedItems.value.forEach(async (findedItem) => {
-        getParents(findedItem.id)
+        getParents([ findedItem.id ])
           .then(async (parrents) => {
             //console.log(parrents.map(i => i.id))
-            await changeProp(parrents, 'show', true)
-            await changeProp(parrents, 'expanded', true)
+            changeProp(parrents, 'show', true)
+            changeProp(parrents, 'expanded', true)
           })
       })
     }
@@ -183,19 +181,25 @@ const startSearch = async (searchText: string) => {
   }
 }
 
-const changeProp = async (items: RowObject[], propName: string, state: boolean) => {
+const changeProp = (items: RowObject[], propName: string, state: boolean) => {
   items.forEach((item) => (item.state as any)[propName] = state)
 }
 
 const changeExpanded = async (id: number, state: boolean) => {
+  if (!flatData.value.length) {
+    return
+  }
   if (state) {
-    flatData.value
+    const currentItem = flatData.value
       .find(item => item.id === id)
-      .state.expanded = state
+    if (currentItem) {
+      currentItem.state.expanded = state
+    }
     const items = flatData.value.filter(item => item.parentId === id)
     changeProp(items, 'show', true)
   } else if (!state) {
-    const ids = getChildIds([id])
+    const childrens = await getChilds([id])
+    const ids = [id, ...childrens.map((item: RowObject) => item.id)]
     const items = flatData.value.filter(item => ids.includes(item.id))
     changeProp(items, 'expanded', false)
     changeProp(items.filter(item => item.id !== id), 'show', false)
@@ -203,12 +207,13 @@ const changeExpanded = async (id: number, state: boolean) => {
 }
 
 const changeChecked = async (id: number, state: boolean) => {
-  const setProps = (ids: number[], state: boolean, useChildren: boolean) => {
+  const setProps = async (ids: number[], state: boolean, useChildren: boolean) => {
     if (useChildren) {
-      ids = getChildIds(ids)
+      const childrens = await getChilds(ids)
+      ids = [...ids, ...childrens.map((item: RowObject) => item.id)]
     }
     flatData.value.filter(item => ids.includes(item.id))
-      .forEach((item) => {
+      .forEach(async (item) => {
         item.state.checked = state
         if (props.openAfterSelect && state) {
           item.state.expanded = state
@@ -222,61 +227,88 @@ const changeChecked = async (id: number, state: boolean) => {
 
     return ids
   }
-  if (state && !props.multiSelect && !props.parentToChild && checkedIds.value.some((i: number) => i !== id)) {
-    setProps(checkedIds.value, false, false)
+  if (state && !multiSelect.value && !props.parentToChild && checkedIds.value.some((i: number) => i !== id)) {
+    await setProps(checkedIds.value, false, false)
   }
-  setProps([id], state, props.parentToChild && props.multiSelect)
-
-  getAllChecked();
+  await setProps([id], state, props.parentToChild && multiSelect.value)
+  await getAllChecked();
 };
 
 /**
  * получить ключи детей по родителю
  */
-const getChildIds = (idParents: number[]): number[] => {
-  const resultIds: number[] = [...idParents];
-  let currentLevelIds = [...idParents];
-
-  while (currentLevelIds.length > 0) {
-    const childIds = flatData.value
-      .filter(item => item.parentId !== undefined && currentLevelIds.includes(item.parentId))
-      .map(item => item.id);
-
-    if (childIds.length > 0) {
-      resultIds.push(...childIds);
-      currentLevelIds = childIds;
-    } else {
-      break;
-    }
-  }
-
-  return resultIds;
-};
-const getParents = (childId: number): Promise<RowObject[]> => {
+const getChilds = (parentsIds: number[]): Promise<RowObject[]> => {
   return new Promise<RowObject[]>((resolve) => {
     const result: RowObject[] = [];
-    let currentId: number | undefined = childId;
+    let currentLevelIds = [...parentsIds];
 
-    while (currentId !== undefined) {
-      const parent = flatData.value.find(item => item.id === currentId);
+    while (currentLevelIds.length > 0) {
+      const childs = flatData.value
+        .filter(item => item.parentId !== undefined && currentLevelIds.includes(item.parentId))
 
-      if (parent !== undefined) {
-        result.push(parent);
-        currentId = parent?.parentId;
+      if (childs.length > 0) {
+        result.push(...childs);
+        currentLevelIds = childs.map(item => item.id);
       } else {
         break;
       }
     }
+
     resolve(result);
   });
 };
 /**
+ * Получить всех родителей
+ */
+const getParents = (childIds: number[]): Promise<RowObject[]> => {
+  return new Promise<RowObject[]>((resolve) => {
+    let result: RowObject[] = [];
+    let currentIds: (number | undefined)[] = childIds;
+
+    while (currentIds?.length) {
+      const parents = flatData.value.filter(item => currentIds?.includes(item.id));
+
+      if (parents?.length) {
+        result = [...result, ...parents];
+        currentIds = parents.map(item => item.parentId);
+      } else {
+        break;
+      }
+    }
+
+    const filteredResult = result.filter(item => !childIds.includes(item.id));
+
+    const uniqueData: RowObject[] = Object.values(
+      filteredResult.reduce((acc, item) => {
+        acc[item.id] = item;
+        return acc;
+      }, {} as Record<number, RowObject>)
+    );
+
+    resolve(uniqueData);
+  });
+};
+const setIndeterminate = async (ids: number[]) => {
+  flatData.value.map(i => i.state.indeterminate = false)
+
+  const parrents = await getParents(ids)
+
+  parrents
+    .filter(i => !i.state.checked)
+    .map(i => i.state.indeterminate = true)
+}
+
+/**
  * Получить все отмеченные эллементы
  */
-const getAllChecked = () => {
+
+const getAllChecked = debounce(async () => {
+  console.log('getAllChecked')
   checkedItems.value = flatData.value.filter(i => i.state.checked)
   emit('update:value', checkedItems.value)
-}
+
+  await setIndeterminate(checkedIds.value)
+}, 300);
 
 /**
  * Установить значение в конкретный эллемент
@@ -303,6 +335,7 @@ const setNodeProps = (optionsProps: {
   });
 };
 
+
 const treeText = computed(() => {
   if (flatData.value?.length && !filteredData.value?.some(i => i.state.show)) {
     return 'На жаль, за вашим запитом нічого не знайдено.'
@@ -313,6 +346,16 @@ const treeText = computed(() => {
   }
   return null
 });
+const checkedIds = computed(() => {
+  if (!checkedItems.value?.length) {
+    return []
+  }
+  return checkedItems.value.map((i: RowObject) => i.id)
+});
+const multiSelect = computed(() => {
+  return props.multiSelect || props.parentToChild
+});
+
 
 watch(() => props.items, (newValue) => {
   filteredData.value = flatData.value = flattenTree(cloneDeep(props.items))

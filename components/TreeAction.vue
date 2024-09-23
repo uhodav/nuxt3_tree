@@ -48,6 +48,7 @@ const clickExpanded = () => {
 
 const checkedClasses = computed(() => ({
   'is-active': props.checked,
+  'is-indeterminate': props.indeterminate,
   'is-disabled': props.disabled?.checked
 }));
 const expandedClasses = computed(() => ({

@@ -11,6 +11,7 @@
         :disabled="disabledActions"
         :checked="checkedRoot"
         :expanded="expandedRoot"
+        :indeterminate="hasIndeterminate"
         @checked="checkAll"
         @expanded="expandedAll"/>
       <div v-for="columnItem in columns"
@@ -86,7 +87,6 @@ const filterItem = (item: RowObject) => {
   }
   return false
 };
-
 const checkAll = () => {
   checkedRoot.value = !checkedRoot.value
   emit('checkAll', checkedRoot.value)
@@ -95,13 +95,14 @@ const expandedAll = () => {
   expandedRoot.value = !expandedRoot.value
   emit('expandedAll', expandedRoot.value)
 }
-
 const onCheck = (id: number, state: boolean) => {
   emit("checked", id, state);
 };
 const onExpanded = (id: number, state: boolean) => {
   emit("expanded", id, state);
 };
+
+const hasIndeterminate = computed(() => props.items.some(item => item.state.indeterminate || item.state.checked))
 
 const disabledActions = computed(() => ({
   checked: !(props.multiSelect && props.useChecked && props.items?.length),

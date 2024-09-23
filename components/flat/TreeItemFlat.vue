@@ -11,6 +11,7 @@
         }"
         :disabled="disabledActions"
         :checked="item.state.checked"
+        :indeterminate="item.state.indeterminate"
         :expanded="item.state.expanded"
         @checked="onCheck"
         @expanded="onExpanded"/>
