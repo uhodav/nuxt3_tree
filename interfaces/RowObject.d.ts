@@ -17,8 +17,8 @@ export interface RowObject {
   level? : number;
   childrens? : number;
   parentId? : number;
-  columns: Object<ColumnItemProps>;
+  columns?: Object<ColumnItemProps>;
   children?: Array<RowObject>;
-  state: StateItemProps;
-  iconType: string;
+  state?: StateItemProps;
+  iconType?: string;
 }

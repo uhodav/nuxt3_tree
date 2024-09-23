@@ -62,7 +62,14 @@ const useSearch = ref(true)  // отображение поиска
 const useTags = ref(true)  // отображение тегов
 const multiSelect = ref(false)  // возможность выбирать несколько значений
 
-const checkedItems = ref<RowObject[]>([])  // выбранные эллементы
+const checkedItems = ref<RowObject[]>([
+  {
+    id: 19237,
+  },
+  {
+    id: 21771,
+  }
+])  // выбранные эллементы
 const findCode = ref('24311120-4')
 
 const columns = ref([

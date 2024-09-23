@@ -45,7 +45,7 @@ import TreeSearchInputFlat from './TreeSearchInputFlat.vue'
 
 const name = 'Tree';
 
-const treeSearchInput = ref<HTMLElement | null>(null);
+const treeSearchInput = ref<{ findText: string } | null>(null);
 
 const props = defineProps<TreeProps>();
 const emit = defineEmits([
@@ -88,13 +88,17 @@ const flattenTree = (data: RowObject[], level = 0, parentId = null) => {
   return result
 };
 
+/**
+ * Клик по тегу. Делаем поиск по коду, что б увидеть эллемент
+ */
 const clickTag = (tag: RowObject) => {
-  console.log(treeSearchInput, tag)
-  /*if (treeSearchInput) {
-    treeSearchInput = tag.columns.code.value
-  }*/
+  if (treeSearchInput) {
+    treeSearchInput.value.findText = tag.columns.code.value
+  }
 }
-
+/**
+ * Действие из шапки дерева
+ */
 const changeAll = (propName: string, state: boolean) => {
   const rootItems = flatData.value.filter(item => !item.parentId)
 
@@ -113,6 +117,9 @@ const highlightMatch = (text: string, regex: RegExp): string => {
   return text.replace(regex, '<b>$1</b>');
 };
 
+/**
+ * сброс состояния поиска и сворачивание всего дерева
+ */
 const clearState = () => {
   findedItems.value = []
   changeProp(flatData.value, 'show', false)
@@ -120,7 +127,6 @@ const clearState = () => {
   changeProp(flatData.value, 'expanded', false)
   flatData.value.filter(item => !item.parentId).map(i => i.state.show = true)
 }
-
 /**
  * ищем ветки дерева и заполняем массив findedItems
  */
@@ -171,7 +177,6 @@ const startSearch = async (searchText: string) => {
       findedItems.value.forEach(async (findedItem) => {
         getParents([ findedItem.id ])
           .then(async (parrents) => {
-            //console.log(parrents.map(i => i.id))
             changeProp(parrents, 'show', true)
             changeProp(parrents, 'expanded', true)
           })
@@ -230,10 +235,10 @@ const changeChecked = async (id: number, state: boolean) => {
   if (state && !multiSelect.value && !props.parentToChild && checkedIds.value.some((i: number) => i !== id)) {
     await setProps(checkedIds.value, false, false)
   }
+
   await setProps([id], state, props.parentToChild && multiSelect.value)
   await getAllChecked();
 };
-
 /**
  * получить ключи детей по родителю
  */
@@ -297,19 +302,15 @@ const setIndeterminate = async (ids: number[]) => {
     .filter(i => !i.state.checked)
     .map(i => i.state.indeterminate = true)
 }
-
 /**
  * Получить все отмеченные эллементы
  */
-
 const getAllChecked = debounce(async () => {
-  console.log('getAllChecked')
   checkedItems.value = flatData.value.filter(i => i.state.checked)
   emit('update:value', checkedItems.value)
 
   await setIndeterminate(checkedIds.value)
 }, 300);
-
 /**
  * Установить значение в конкретный эллемент
  * id - ключ эллемента
@@ -335,7 +336,6 @@ const setNodeProps = (optionsProps: {
   });
 };
 
-
 const treeText = computed(() => {
   if (flatData.value?.length && !filteredData.value?.some(i => i.state.show)) {
     return 'На жаль, за вашим запитом нічого не знайдено.'
@@ -346,18 +346,52 @@ const treeText = computed(() => {
   }
   return null
 });
+/**
+ * Ключи всех выбранных эллементов
+ */
 const checkedIds = computed(() => {
   if (!checkedItems.value?.length) {
     return []
   }
   return checkedItems.value.map((i: RowObject) => i.id)
 });
+/**
+ * Можно ли выбирать несколько эллементов
+ */
 const multiSelect = computed(() => {
   return props.multiSelect || props.parentToChild
 });
+/**
+ * Сравниваем два массива и получаем значения что отличаются
+ */
+const findDifferences = (arr1: number[], arr2: number[]): number[] => {
+  const set1 = new Set(arr1);
+  const set2 = new Set(arr2);
 
+  const onlyInArr1 = arr1.filter(num => !set2.has(num));
+  const onlyInArr2 = arr2.filter(num => !set1.has(num));
 
+  return [...onlyInArr1, ...onlyInArr2 ];
+};
+
+/**
+ * Следим за набором данных (в виде дерева)
+ * получаем плоское дерево и проставляем признаки для изначально выбранных эллементов
+ */
 watch(() => props.items, (newValue) => {
-  filteredData.value = flatData.value = flattenTree(cloneDeep(props.items))
+  if (!props.items?.length) {
+    return
+  }
+  const result = flattenTree(cloneDeep(props.items))
+  if (props.value?.length) {
+    const ids = props.value.map(i => i.id)
+    result
+      .filter(item => ids.includes(item.id))
+      .forEach((item) => {
+        item.state.checked = true
+      })
+  }
+  filteredData.value = flatData.value = result
+  getAllChecked();
 }, {immediate: true})
 </script>

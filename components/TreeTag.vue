@@ -4,8 +4,11 @@
       class="tree-tags_item"
       @click="emit('click-tag', item)">
       <span class="tree-tags_item-content">
-        <span v-if="item.columns.code" v-html="item.columns.code.value"/>
-        <span v-if="item.columns.title" v-html="item.columns.title.value"/>
+        <template v-if="item.columns">
+          <span v-if="item.columns.code" v-html="item.columns.code.value"/>
+          <span v-if="item.columns.title" v-html="item.columns.title.value"/>
+        </template>
+        <span v-else-if="item.id" v-html="item.id"/>
       </span>
       <div class="tree-tags_item-clear"
         @click.stop="emit('delete-tag', item)"/>

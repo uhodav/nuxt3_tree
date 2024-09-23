@@ -30,6 +30,10 @@ const emit = defineEmits(['search', 'start-search']);
 
 const findText = ref<string>('');
 
+defineExpose({
+  findText,
+});
+
 const props = defineProps<{
   items: RowObject[];
   disabled: boolean
